@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA — Your AI Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+:root {
+  --bg:       #080d16;
+  --bg2:      #0e1520;
+  --bg3:      #141e2e;
+  --bg4:      #1a2540;
+  --border:   #1f2d45;
+  --border2:  #28395a;
+  --text:     #dce6f5;
+  --text2:    #7d8faa;
+  --text3:    #4a5870;
+  --blue:     #3b82f6;
+  --blue2:    #60a5fa;
+  --blue-dim: rgba(59,130,246,0.12);
+  --green:    #10b981;
+  --green-dim:rgba(16,185,129,0.12);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.12);
+  --rose:     #f43f5e;
+  --rose-dim: rgba(244,63,94,0.12);
+  --violet:   #8b5cf6;
+  --r:        10px;
+  --rs:       7px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Sora', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+.app { display:flex; height:100vh; overflow:hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width:252px; min-width:252px;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+
+.sidebar-brand {
+  padding:20px 18px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:11px;
+}
+.brand-icon {
+  width:34px; height:34px;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+}
+.brand-name {
+  font-size:1.15rem; font-weight:800;
+  letter-spacing:-0.3px; color:var(--text);
+}
+.brand-name em { font-style:normal; color:var(--blue2); }
+.brand-tagline { font-size:0.65rem; color:var(--text3); margin-top:1px; letter-spacing:0.5px; }
+
+.sidebar-nav {
+  flex:1; padding:14px 10px;
+  display:flex; flex-direction:column; gap:2px;
+  overflow-y:auto;
+}
+
+.nav-label {
+  font-size:0.6rem; font-weight:700;
+  color:var(--text3); letter-spacing:1.8px;
+  text-transform:uppercase;
+  padding:10px 8px 4px;
+}
+
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border-radius:var(--rs);
+  cursor:pointer; transition:all 0.15s;
+  color:var(--text2); font-size:0.84rem; font-weight:500;
+  border:1px solid transparent;
+  user-select:none;
+}
+.nav-item:hover { background:var(--bg3); color:var(--text); border-color:var(--border); }
+.nav-item.active { background:var(--blue-dim); color:var(--blue2); border-color:rgba(59,130,246,0.2); }
+.nav-item .icon { font-size:0.95rem; width:18px; text-align:center; flex-shrink:0; }
+.nav-item .label { flex:1; }
+.nav-item .badge {
+  font-size:0.58rem; padding:2px 6px; border-radius:10px;
+  font-family:'JetBrains Mono',monospace; font-weight:600;
+}
+.badge-live { background:var(--green); color:#fff; animation:blink 2s ease infinite; }
+.badge-new  { background:var(--blue);  color:#fff; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+.sidebar-bottom {
+  padding:14px 10px;
+  border-top:1px solid var(--border);
+}
+.online-pill {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 12px; background:var(--bg3);
+  border-radius:var(--rs); border:1px solid var(--border);
+}
+.live-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--green); box-shadow:0 0 5px var(--green);
+  animation:blink 2s ease infinite; flex-shrink:0;
+}
+.online-text { font-size:0.75rem; color:var(--text2); }
+.online-text strong { color:var(--green); font-weight:600; }
+
+/* MAIN */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.topbar {
+  height:56px; flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center;
+  padding:0 22px; gap:14px;
+  background:var(--bg);
+}
+.topbar-title { font-size:0.95rem; font-weight:700; color:var(--text); }
+.topbar-desc  { font-size:0.75rem; color:var(--text3); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+.btn {
+  padding:7px 15px; border-radius:var(--rs);
+  font-family:'Sora',sans-serif; font-size:0.78rem; font-weight:600;
+  cursor:pointer; transition:all 0.15s; border:1px solid var(--border);
+  background:transparent; color:var(--text2);
+  display:flex; align-items:center; gap:6px;
+}
+.btn:hover { background:var(--bg3); color:var(--text); border-color:var(--border2); }
+.btn-blue { background:var(--blue); border-color:var(--blue); color:#fff; }
+.btn-blue:hover { background:var(--blue2); border-color:var(--blue2); color:#fff; }
+.btn-sm { padding:5px 11px; font-size:0.72rem; }
+
+/* PANELS */
+.panel { display:none; flex:1; overflow:hidden; flex-direction:column; }
+.panel.active { display:flex; }
+
+/* ═══════════════════════════════════════
+   SETUP SCREEN
+═══════════════════════════════════════ */
+#setupOverlay {
+  position:fixed; inset:0; z-index:999;
+  background:rgba(8,13,22,0.97);
+  backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+}
+.setup-card {
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:16px; padding:40px; width:100%; max-width:460px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.6);
+}
+.setup-logo {
+  display:flex; align-items:center; gap:12px; margin-bottom:28px;
+}
+.setup-icon {
+  width:42px; height:42px;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+}
+.setup-title { font-size:1.4rem; font-weight:800; }
+.setup-title span { color:var(--blue2); }
+.setup-sub { font-size:0.85rem; color:var(--text2); line-height:1.6; margin-bottom:24px; }
+.setup-sub a { color:var(--blue2); text-decoration:none; }
+.setup-sub a:hover { text-decoration:underline; }
+
+.setup-field { margin-bottom:16px; }
+.setup-field label {
+  display:block; font-size:0.78rem; font-weight:600;
+  color:var(--text2); margin-bottom:6px; letter-spacing:0.3px;
+}
+.setup-field input {
+  width:100%; padding:11px 14px;
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:var(--rs); color:var(--text);
+  font-family:'Sora',sans-serif; font-size:0.88rem;
+  outline:none; transition:border-color 0.15s;
+}
+.setup-field input:focus { border-color:var(--blue); }
+.setup-field input::placeholder { color:var(--text3); }
+.setup-hint { font-size:0.7rem; color:var(--text3); margin-top:5px; }
+.setup-hint a { color:var(--blue2); text-decoration:none; }
+
+.setup-start {
+  width:100%; padding:13px;
+  background:linear-gradient(135deg,var(--blue),var(--violet));
+  border:none; border-radius:var(--rs);
+  color:#fff; font-family:'Sora',sans-serif;
+  font-size:0.9rem; font-weight:700;
+  cursor:pointer; transition:opacity 0.18s;
+  margin-top:8px;
+}
+.setup-start:hover { opacity:0.88; }
+.setup-err { font-size:0.75rem; color:var(--rose); margin-top:8px; display:none; }
+
+/* ═══════════════════════════════════════
+   CHAT PANEL
+═══════════════════════════════════════ */
+.chat-wrap { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.mode-bar {
+  padding:10px 18px; flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+}
+.mode-chip {
+  padding:5px 13px; border-radius:20px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text2); font-size:0.76rem; font-weight:500;
+  cursor:pointer; font-family:'Sora',sans-serif; transition:all 0.15s;
+  white-space:nowrap;
+}
+.mode-chip:hover { border-color:var(--border2); color:var(--text); }
+.mode-chip.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+
+.messages {
+  flex:1; overflow-y:auto; padding:20px 22px;
+  display:flex; flex-direction:column; gap:16px;
+}
+
+.msg { display:flex; gap:12px; align-items:flex-start; animation:msgIn 0.2s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.msg.user { flex-direction:row-reverse; }
+
+.msg-avatar {
+  width:32px; height:32px; border-radius:9px;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700;
+}
+.msg-avatar.nova-av {
+  background:linear-gradient(135deg,var(--blue),var(--violet));
+  color:#fff; font-size:12px;
+}
+.msg-avatar.user-av {
+  background:var(--bg4); border:1px solid var(--border2);
+  color:var(--text2); font-size:13px;
+}
+
+.msg-body { display:flex; flex-direction:column; gap:4px; max-width:72%; }
+.msg.user .msg-body { align-items:flex-end; }
+
+.msg-who { font-size:0.68rem; font-weight:600; color:var(--text3); letter-spacing:0.3px; padding:0 4px; }
+
+.bubble {
+  padding:12px 16px; border-radius:12px;
+  font-size:0.875rem; line-height:1.7; word-break:break-word;
+}
+.bubble.nova-b {
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); border-radius:4px 12px 12px 12px;
+}
+.bubble.user-b {
+  background:var(--blue); color:#fff;
+  border-radius:12px 4px 12px 12px;
+}
+.bubble strong { font-weight:600; }
+.bubble em { font-style:italic; opacity:0.85; }
+.bubble code {
+  background:rgba(0,0,0,0.3); padding:1px 5px; border-radius:4px;
+  font-family:'JetBrains Mono',monospace; font-size:0.8em;
+}
+.bubble ul, .bubble ol { padding-left:18px; margin:6px 0; }
+.bubble li { margin-bottom:3px; }
+
+.typing-bubble {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:4px 12px 12px 12px;
+  padding:14px 18px; display:flex; gap:5px; align-items:center;
+}
+.typing-bubble span {
+  width:6px; height:6px; border-radius:50%; background:var(--blue2);
+  animation:bounce 1.2s ease infinite;
+}
+.typing-bubble span:nth-child(2) { animation-delay:0.15s; }
+.typing-bubble span:nth-child(3) { animation-delay:0.3s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.3} 40%{transform:translateY(-6px);opacity:1} }
+
+.chat-footer {
+  padding:14px 18px; border-top:1px solid var(--border);
+  background:var(--bg2); flex-shrink:0;
+}
+.quick-row {
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;
+}
+.qchip {
+  padding:5px 11px; border-radius:20px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text3); font-size:0.72rem;
+  cursor:pointer; font-family:'Sora',sans-serif; transition:all 0.15s;
+  white-space:nowrap;
+}
+.qchip:hover { border-color:var(--blue); color:var(--blue2); background:var(--blue-dim); }
+
+.input-row { display:flex; gap:8px; }
+.chat-input {
+  flex:1; padding:11px 15px;
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--r); color:var(--text);
+  font-family:'Sora',sans-serif; font-size:0.875rem;
+  outline:none; transition:border-color 0.15s; resize:none;
+}
+.chat-input:focus { border-color:var(--blue); }
+.chat-input::placeholder { color:var(--text3); }
+.send-btn {
+  padding:11px 20px; border-radius:var(--r);
+  background:var(--blue); border:none;
+  color:#fff; font-family:'Sora',sans-serif;
+  font-size:0.82rem; font-weight:700;
+  cursor:pointer; transition:all 0.15s; flex-shrink:0;
+  display:flex; align-items:center; gap:6px;
+}
+.send-btn:hover { background:var(--blue2); }
+.send-btn:disabled { opacity:0.45; cursor:not-allowed; }
+
+/* ═══════════════════════════════════════
+   NEWS PANEL
+═══════════════════════════════════════ */
+.news-panel { overflow:hidden; }
+.news-top {
+  padding:14px 22px; flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.news-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+.ntab {
+  padding:6px 14px; border-radius:20px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text2); font-size:0.76rem; font-weight:500;
+  cursor:pointer; font-family:'Sora',sans-serif; transition:all 0.15s;
+}
+.ntab:hover { border-color:var(--border2); color:var(--text); }
+.ntab.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+.news-refresh {
+  margin-left:auto; padding:6px 13px; border-radius:var(--rs);
+  background:transparent; border:1px solid var(--border);
+  color:var(--text2); font-size:0.74rem; font-family:'Sora',sans-serif;
+  cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:5px;
+}
+.news-refresh:hover { background:var(--bg3); color:var(--text); border-color:var(--border2); }
+.news-refresh.spinning .ri { animation:spin 0.8s linear infinite; display:inline-block; }
+@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+.news-body { flex:1; overflow-y:auto; padding:20px 22px; }
+
+.news-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px;
+}
+
+.news-card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r); padding:18px 20px;
+  transition:all 0.18s; cursor:pointer;
+  display:flex; flex-direction:column; gap:8px;
+  position:relative; overflow:hidden;
+}
+.news-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width:3px; background:var(--blue); opacity:0; transition:opacity 0.18s;
+}
+.news-card:hover { border-color:var(--border2); background:var(--bg3); }
+.news-card:hover::before { opacity:1; }
+.nc-source {
+  font-size:0.65rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:1.2px; color:var(--blue2);
+  font-family:'JetBrains Mono',monospace;
+}
+.nc-title { font-size:0.875rem; font-weight:600; line-height:1.5; color:var(--text); }
+.nc-desc { font-size:0.78rem; color:var(--text2); line-height:1.55; }
+.nc-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:4px;
+}
+.nc-time { font-size:0.68rem; color:var(--text3); font-family:'JetBrains Mono',monospace; }
+.nc-ask {
+  font-size:0.7rem; color:var(--blue2); font-weight:600;
+  padding:3px 8px; border-radius:5px; background:var(--blue-dim);
+  transition:background 0.15s;
+}
+.nc-ask:hover { background:rgba(59,130,246,0.22); }
+
+.news-skeleton {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r); padding:18px 20px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.sk { background:var(--bg4); border-radius:4px; animation:sk 1.4s ease infinite; }
+@keyframes sk { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+.news-empty {
+  grid-column:1/-1; text-align:center; padding:60px 20px;
+  color:var(--text2);
+}
+.news-empty .big { font-size:2.5rem; margin-bottom:12px; }
+.news-empty p { font-size:0.88rem; line-height:1.6; max-width:320px; margin:0 auto; }
+
+/* ═══════════════════════════════════════
+   FACTS PANEL
+═══════════════════════════════════════ */
+.facts-panel { overflow:hidden; }
+.facts-body {
+  flex:1; overflow-y:auto; padding:24px 22px;
+}
+.facts-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px;
+}
+.fact-card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r); padding:22px;
+  transition:all 0.18s; display:flex; flex-direction:column; gap:10px;
+}
+.fact-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.fact-cat {
+  font-size:0.65rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:1.2px; font-family:'JetBrains Mono',monospace;
+}
+.fact-cat.science { color:var(--blue2); }
+.fact-cat.india   { color:var(--amber); }
+.fact-cat.world   { color:var(--green); }
+.fact-cat.space   { color:var(--violet); }
+.fact-cat.history { color:var(--rose); }
+.fact-icon { font-size:2rem; }
+.fact-text { font-size:0.875rem; line-height:1.7; color:var(--text); }
+.fact-share {
+  font-size:0.72rem; color:var(--text3); cursor:pointer;
+  padding:5px 0; border-top:1px solid var(--border);
+  margin-top:4px; transition:color 0.15s;
+}
+.fact-share:hover { color:var(--blue2); }
+
+/* ═══════════════════════════════════════
+   WELLNESS PANEL
+═══════════════════════════════════════ */
+.wellness-body {
+  flex:1; overflow-y:auto; padding:24px 22px;
+  display:flex; flex-direction:column; gap:20px;
+}
+.well-header {
+  background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(59,130,246,0.08));
+  border:1px solid rgba(16,185,129,0.2);
+  border-radius:var(--r); padding:24px 26px;
+}
+.well-header h2 { font-size:1.15rem; font-weight:700; margin-bottom:6px; }
+.well-header p { font-size:0.84rem; color:var(--text2); line-height:1.6; }
+.well-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:12px;
+}
+.well-card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r); padding:20px;
+  display:flex; flex-direction:column; gap:8px;
+  transition:all 0.18s; cursor:pointer;
+}
+.well-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.well-card .wc-icon { font-size:1.7rem; }
+.well-card .wc-title { font-size:0.88rem; font-weight:700; }
+.well-card .wc-desc { font-size:0.8rem; color:var(--text2); line-height:1.6; }
+.well-card .wc-tag {
+  font-size:0.65rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:1px; padding:3px 8px; border-radius:5px;
+  font-family:'JetBrains Mono',monospace; align-self:flex-start;
+}
+.wc-tag.mental  { background:var(--blue-dim);  color:var(--blue2); }
+.wc-tag.physical{ background:var(--green-dim); color:var(--green); }
+.wc-tag.mindset { background:var(--amber-dim); color:var(--amber); }
+.wc-tag.social  { background:var(--rose-dim);  color:var(--rose); }
+
+/* ═══════════════════════════════════════
+   INDIA PANEL
+═══════════════════════════════════════ */
+.india-body { flex:1; overflow-y:auto; padding:24px 22px; display:flex; flex-direction:column; gap:18px; }
+.india-hero {
+  background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(16,185,129,0.07));
+  border:1px solid rgba(245,158,11,0.2); border-radius:var(--r);
+  padding:24px 26px; display:flex; align-items:center; gap:18px;
+}
+.india-flag { font-size:3rem; }
+.india-hero-text h2 { font-size:1.1rem; font-weight:700; margin-bottom:5px; }
+.india-hero-text p { font-size:0.82rem; color:var(--text2); line-height:1.6; }
+.india-topics-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px;
+}
+.india-topic {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px 18px;
+  cursor:pointer; transition:all 0.18s;
+  display:flex; align-items:center; gap:12px;
+}
+.india-topic:hover { background:var(--bg3); border-color:var(--amber-dim); transform:translateY(-2px); }
+.india-topic .it-icon { font-size:1.4rem; flex-shrink:0; }
+.india-topic .it-text .it-title { font-size:0.84rem; font-weight:600; margin-bottom:2px; }
+.india-topic .it-text .it-sub { font-size:0.72rem; color:var(--text2); }
+
+/* ═══════════════════════════════════════
+   TICKER
+═══════════════════════════════════════ */
+.ticker-wrap {
+  height:36px; background:var(--bg2); border-top:1px solid var(--border);
+  display:flex; align-items:center; overflow:hidden; flex-shrink:0; position:relative;
+}
+.ticker-label {
+  padding:0 14px; height:100%; display:flex; align-items:center;
+  background:var(--blue); color:#fff;
+  font-family:'JetBrains Mono',monospace; font-size:0.6rem; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  flex-shrink:0; gap:6px; z-index:2;
+}
+.ticker-mask {
+  flex:1; overflow:hidden; display:flex; align-items:center;
+}
+.ticker-track {
+  display:flex; align-items:center; gap:0;
+  animation:ticker 45s linear infinite;
+  white-space:nowrap;
+}
+.ticker-track:hover { animation-play-state:paused; }
+@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.ticker-item {
+  padding:0 32px; font-size:0.72rem; color:var(--text2);
+  font-family:'JetBrains Mono',monospace;
+  display:flex; align-items:center; gap:8px;
+}
+.ticker-dot { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:9999;
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:var(--r); padding:12px 18px;
+  font-size:0.82rem; color:var(--text);
+  box-shadow:0 8px 30px rgba(0,0,0,0.5);
+  transform:translateY(20px); opacity:0;
+  transition:all 0.25s;
+  max-width:320px;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.success { border-color:rgba(16,185,129,0.4); }
+.toast.error   { border-color:rgba(244,63,94,0.4); }
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar { width:0; min-width:0; overflow:hidden; position:absolute; z-index:50; transition:width 0.2s; }
+  .sidebar.open { width:252px; min-width:252px; height:100vh; box-shadow:20px 0 60px rgba(0,0,0,0.5); }
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP OVERLAY -->
+<div id="setupOverlay">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="setup-icon">🤖</div>
+      <div>
+        <div class="setup-title">Welcome to <span>NOVA</span></div>
+        <div style="font-size:0.72rem;color:var(--text3);margin-top:2px;">Your AI Companion — Setup Required</div>
+      </div>
+    </div>
+    <p class="setup-sub">
+      NOVA uses <strong style="color:var(--text)">Groq API</strong> for lightning-fast AI responses (free).
+      Get your free API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — it takes 30 seconds.
+    </p>
+    <div class="setup-field">
+      <label>Groq API Key</label>
+      <input type="password" id="groqKeyInput" placeholder="gsk_..." autocomplete="off" />
+      <div class="setup-hint">Your key is stored only in this browser session. <a href="https://console.groq.com/keys" target="_blank">Get free key →</a></div>
+    </div>
+    <div id="setupErr" class="setup-err">⚠️ Invalid key or connection failed. Please check and try again.</div>
+    <button class="setup-start" id="setupBtn" onclick="initApp()">
+      <span id="setupBtnText">Start NOVA →</span>
+    </button>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤖</div>
+      <div>
+        <div class="brand-name">NO<em>VA</em></div>
+        <div class="brand-tagline">AI Companion</div>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <div class="nav-item active" onclick="switchPanel('chat',this)">
+        <span class="icon">💬</span>
+        <span class="label">AI Chat</span>
+        <span class="badge badge-live">LIVE</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('news',this)">
+        <span class="icon">📰</span>
+        <span class="label">World News</span>
+        <span class="badge badge-live">LIVE</span>
+      </div>
+
+      <div class="nav-label">Discover</div>
+      <div class="nav-item" onclick="switchPanel('facts',this)">
+        <span class="icon">✨</span>
+        <span class="label">Amazing Facts</span>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('india',this)">
+        <span class="icon">🇮🇳</span>
+        <span class="label">India Focus</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('wellness',this)">
+        <span class="icon">🌿</span>
+        <span class="label">Wellness</span>
+      </div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="online-pill">
+        <div class="live-dot"></div>
+        <div class="online-text">AI Status: <strong>Online</strong></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topTitle">AI Chat</div>
+        <div class="topbar-desc" id="topDesc">Powered by Groq · llama-3.3-70b</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm" onclick="clearChat()">🗑 Clear</button>
+        <button class="btn btn-blue btn-sm" id="exportBtn" onclick="exportChat()">↓ Export</button>
+      </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div class="panel active" id="panel-chat">
+      <div class="chat-wrap">
+        <div class="mode-bar">
+          <button class="mode-chip active" data-mode="friend"   onclick="setMode(this)">👫 Friend</button>
+          <button class="mode-chip"        data-mode="mentor"   onclick="setMode(this)">🎓 Mentor</button>
+          <button class="mode-chip"        data-mode="news"     onclick="setMode(this)">🌍 World Analyst</button>
+          <button class="mode-chip"        data-mode="india"    onclick="setMode(this)">🇮🇳 India Expert</button>
+          <button class="mode-chip"        data-mode="wellness" onclick="setMode(this)">🌿 Wellness Coach</button>
+          <button class="mode-chip"        data-mode="facts"    onclick="setMode(this)">✨ Fact Machine</button>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="msg">
+            <div class="msg-avatar nova-av">N</div>
+            <div class="msg-body">
+              <div class="msg-who">NOVA</div>
+              <div class="bubble nova-b">
+                Hey! 👋 I'm <strong>NOVA</strong> — your AI companion powered by Groq's lightning-fast AI.<br><br>
+                I can chat about <strong>anything</strong> — world news, India affairs, amazing facts, wellness, life advice, or just have a good conversation. Switch modes above to change my personality.<br><br>
+                What's on your mind today?
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-footer">
+          <div class="quick-row" id="quickRow">
+            <button class="qchip" onclick="sendQuick(this)">🌟 Tell me an amazing fact</button>
+            <button class="qchip" onclick="sendQuick(this)">🇮🇳 Latest India news</button>
+            <button class="qchip" onclick="sendQuick(this)">🌍 What's happening in the world?</button>
+            <button class="qchip" onclick="sendQuick(this)">😊 Motivate me</button>
+            <button class="qchip" onclick="sendQuick(this)">🧘 Give me a wellness tip</button>
+          </div>
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask NOVA anything…"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send ↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEWS PANEL -->
+    <div class="panel" id="panel-news">
+      <div class="news-top">
+        <div class="news-tabs">
+          <button class="ntab active" data-q="top headlines world" onclick="loadNews(this)">🌍 World</button>
+          <button class="ntab" data-q="India news today"           onclick="loadNews(this)">🇮🇳 India</button>
+          <button class="ntab" data-q="technology AI news"         onclick="loadNews(this)">💻 Tech</button>
+          <button class="ntab" data-q="science discovery"          onclick="loadNews(this)">🔬 Science</button>
+          <button class="ntab" data-q="health medicine"            onclick="loadNews(this)">🏥 Health</button>
+          <button class="ntab" data-q="business economy"           onclick="loadNews(this)">📈 Business</button>
+          <button class="ntab" data-q="sports cricket"             onclick="loadNews(this)">🏆 Sports</button>
+        </div>
+        <button class="news-refresh" id="refreshBtn" onclick="refreshCurrentNews()">
+          <span class="ri">↻</span> Refresh
+        </button>
+      </div>
+      <div class="news-body">
+        <div class="news-grid" id="newsGrid"></div>
+      </div>
+    </div>
+
+    <!-- FACTS PANEL -->
+    <div class="panel" id="panel-facts">
+      <div class="facts-body">
+        <div class="facts-grid" id="factsGrid"></div>
+      </div>
+    </div>
+
+    <!-- WELLNESS PANEL -->
+    <div class="panel" id="panel-wellness">
+      <div class="wellness-body">
+        <div class="well-header">
+          <h2>🌿 Your Daily Wellness Hub</h2>
+          <p>Click any card to get a personalized tip from NOVA. Science-backed, heart-centered, always uplifting.</p>
+        </div>
+        <div class="well-grid" id="wellGrid"></div>
+      </div>
+    </div>
+
+    <!-- INDIA PANEL -->
+    <div class="panel" id="panel-india">
+      <div class="india-body">
+        <div class="india-hero">
+          <div class="india-flag">🇮🇳</div>
+          <div class="india-hero-text">
+            <h2>India Focus — Bharat at a Glance</h2>
+            <p>Tap any topic to get an instant AI briefing from NOVA on India's latest developments, achievements, and stories.</p>
+          </div>
+        </div>
+        <div class="india-topics-grid" id="indiaGrid"></div>
+      </div>
+    </div>
+
+    <!-- TICKER -->
+    <div class="ticker-wrap">
+      <div class="ticker-label">⚡ LIVE</div>
+      <div class="ticker-mask">
+        <div class="ticker-track" id="tickerTrack">
+          <div class="ticker-item"><span class="ticker-dot" style="background:var(--blue)"></span>Loading live updates…</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ─── STATE ───────────────────────────────────────────────────────
+let GROQ_KEY    = '';
+let chatHistory = [];
+let isTyping    = false;
+let currentMode = 'friend';
+let currentNewsQ = 'top headlines world';
+let appReady    = false;
+
+// ─── SYSTEM PROMPTS ──────────────────────────────────────────────
+const MODES = {
+  friend:
+    `You are NOVA, a warm and witty AI best friend. Be casual, conversational, funny when appropriate, honest and real. Use emojis naturally. Keep replies concise (2-4 short paragraphs). Never be preachy.`,
+  mentor:
+    `You are NOVA, a wise life mentor. Give thoughtful, structured, actionable advice. Draw from philosophy, psychology and real-world wisdom. Be encouraging but always honest. Responses should be clear and practical.`,
+  news:
+    `You are NOVA, a sharp world affairs analyst. When asked about news or events, summarize clearly, give context, mention different perspectives and global impact. Be neutral and factual. Today is ${new Date().toDateString()}.`,
+  india:
+    `You are NOVA, India's dedicated AI expert. You know everything about Indian politics, ISRO, economy, culture, cricket, technology, education (UPSC/JEE/NEET), and current affairs. Be enthusiastic about India's achievements. Today is ${new Date().toDateString()}.`,
+  wellness:
+    `You are NOVA, a compassionate wellness coach. Give evidence-based mental health tips, mindfulness exercises, positive psychology techniques, and healthy habit advice. Always be warm and non-judgmental. Practical over preachy.`,
+  facts:
+    `You are NOVA, a curious facts enthusiast. When asked for facts, share genuinely mind-blowing, surprising, and lesser-known facts with enthusiasm. Add context that makes the fact even more amazing. Use emojis as section markers.`
+};
+
+const QUICK_PROMPTS = {
+  friend:   ['🌟 Tell me an amazing fact','😊 Motivate me','💬 Tell me something interesting','🤔 Give me life advice'],
+  mentor:   ['🎯 How do I set better goals?','📚 Best daily habits for success','💪 How do I overcome self-doubt?','🌱 Growth mindset tips'],
+  news:     ['🌍 What is happening in the world today?','🔥 Most important story right now','🌏 Major events this week','💡 Explain a big world issue simply'],
+  india:    ['🚀 Latest ISRO news','🏏 India cricket update','📈 India economy status','🎓 UPSC preparation tips'],
+  wellness: ['🧘 Quick mindfulness exercise','😴 Tips for better sleep','🌞 Ideal morning routine','💚 How to reduce stress today'],
+  facts:    ['🌌 Amaze me with a space fact','🐙 Wild animal fact','🇮🇳 Surprising India fact','⚛️ Mind-bending science fact']
+};
+
+// ─── GROQ API ────────────────────────────────────────────────────
+async function callGroq(messages, systemPrompt) {
+  const body = {
+    model: 'llama-3.3-70b-versatile',
+    max_tokens: 1024,
+    temperature: 0.7,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messages.slice(-14)
+    ]
+  };
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_KEY}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ─── SETUP ───────────────────────────────────────────────────────
+async function initApp() {
+  const key = document.getElementById('groqKeyInput').value.trim();
+  const err = document.getElementById('setupErr');
+  const btn = document.getElementById('setupBtnText');
+
+  if (!key.startsWith('gsk_')) {
+    err.style.display = 'block';
+    err.textContent = '⚠️ Groq keys start with "gsk_". Please check your key.';
+    return;
+  }
+
+  btn.textContent = 'Connecting…';
+  err.style.display = 'none';
+
+  // Test the key with a minimal call
+  GROQ_KEY = key;
+  try {
+    await callGroq([{ role:'user', content:'Hi' }], 'Reply with exactly: OK');
+  } catch(e) {
+    GROQ_KEY = '';
+    err.style.display = 'block';
+    err.textContent = `⚠️ ${e.message}`;
+    btn.textContent = 'Start NOVA →';
+    return;
+  }
+
+  appReady = true;
+  document.getElementById('setupOverlay').style.display = 'none';
+  btn.textContent = 'Start NOVA →';
+
+  // Load everything
+  loadNews(document.querySelector('.ntab.active'));
+  populateFacts();
+  populateWellness();
+  populateIndia();
+  populateTicker();
+}
+
+// ─── PANEL SWITCHING ─────────────────────────────────────────────
+const PANEL_META = {
+  chat:     { title: 'AI Chat',        desc: 'Powered by Groq · llama-3.3-70b' },
+  news:     { title: 'World News',     desc: 'AI-curated live news feed' },
+  facts:    { title: 'Amazing Facts',  desc: 'Mind-blowing facts about our world' },
+  india:    { title: 'India Focus',    desc: 'Bharat — latest news & achievements' },
+  wellness: { title: 'Wellness Hub',   desc: 'Your daily mental & physical health guide' }
+};
+
+function switchPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+
+  const meta = PANEL_META[name] || {};
+  document.getElementById('topTitle').textContent = meta.title || name;
+  document.getElementById('topDesc').textContent  = meta.desc  || '';
+
+  // Show/hide topbar actions
+  const showClear = name === 'chat';
+  document.getElementById('exportBtn').style.display = showClear ? '' : 'none';
+  document.querySelector('.btn.btn-sm').style.display = showClear ? '' : 'none';
+}
+
+// ─── CHAT ────────────────────────────────────────────────────────
+function setMode(el) {
+  document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentMode = el.dataset.mode;
+  updateQuickChips();
+  chatHistory = []; // reset history on mode change
+  showToast('Switched to ' + el.textContent.trim() + ' mode');
+}
+
+function updateQuickChips() {
+  const row = document.getElementById('quickRow');
+  const chips = QUICK_PROMPTS[currentMode] || QUICK_PROMPTS.friend;
+  row.innerHTML = chips.map(c =>
+    `<button class="qchip" onclick="sendQuick(this)">${c}</button>`
+  ).join('');
+}
+
+function sendQuick(el) {
+  const txt = el.textContent.trim();
+  document.getElementById('chatInput').value = txt;
+  sendMessage();
+}
+
+async function sendMessage() {
+  if (!appReady) { showToast('Please complete setup first.','error'); return; }
+  const input = document.getElementById('chatInput');
+  const text  = input.value.trim();
+  if (!text || isTyping) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  appendMessage(text, 'user');
+  chatHistory.push({ role:'user', content:text });
+
+  isTyping = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  const typing = addTyping();
+
+  try {
+    const reply = await callGroq(chatHistory, MODES[currentMode] || MODES.friend);
+    typing.remove();
+    appendMessage(reply, 'nova');
+    chatHistory.push({ role:'assistant', content:reply });
+  } catch(e) {
+    typing.remove();
+    appendMessage(`⚠️ Error: ${e.message}. Please try again.`, 'nova');
+  }
+
+  isTyping = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function appendMessage(text, who) {
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = 'msg' + (who === 'user' ? ' user' : '');
+
+  const formatted = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\n/g,'<br>');
+
+  div.innerHTML = `
+    <div class="msg-avatar ${who === 'nova' ? 'nova-av' : 'user-av'}">${who === 'nova' ? 'N' : '👤'}</div>
+    <div class="msg-body">
+      <div class="msg-who">${who === 'nova' ? 'NOVA' : 'You'}</div>
+      <div class="bubble ${who === 'nova' ? 'nova-b' : 'user-b'}">${formatted}</div>
+    </div>`;
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = 'msg';
+  div.id = 'typingMsg';
+  div.innerHTML = `
+    <div class="msg-avatar nova-av">N</div>
+    <div class="msg-body">
+      <div class="msg-who">NOVA</div>
+      <div class="typing-bubble"><span></span><span></span><span></span></div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function clearChat() {
+  chatHistory = [];
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `
+    <div class="msg">
+      <div class="msg-avatar nova-av">N</div>
+      <div class="msg-body">
+        <div class="msg-who">NOVA</div>
+        <div class="bubble nova-b">Chat cleared! Ready for a fresh conversation. What's on your mind? 😊</div>
+      </div>
+    </div>`;
+  showToast('Chat cleared');
+}
+
+function exportChat() {
+  if (chatHistory.length === 0) { showToast('Nothing to export yet.','error'); return; }
+  const text = chatHistory.map(m => `[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
+  const blob = new Blob([text], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `nova-chat-${Date.now()}.txt`;
+  a.click();
+  showToast('Chat exported!','success');
+}
+
+// Auto-resize textarea
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('chatInput');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+    });
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+  }
+});
+
+// ─── NEWS ─────────────────────────────────────────────────────────
+async function loadNews(tabEl) {
+  if (!appReady) return;
+
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  currentNewsQ = tabEl.dataset.q;
+
+  const grid = document.getElementById('newsGrid');
+  // Show skeletons
+  grid.innerHTML = Array(9).fill(0).map(() => `
+    <div class="news-skeleton">
+      <div class="sk" style="width:30%;height:10px;margin-bottom:10px;"></div>
+      <div class="sk" style="width:100%;height:14px;margin-bottom:6px;"></div>
+      <div class="sk" style="width:80%;height:14px;margin-bottom:14px;"></div>
+      <div class="sk" style="width:60%;height:10px;"></div>
+    </div>`).join('');
+
+  try {
+    const prompt = `You are a news curator. Generate 9 realistic, current, detailed news headlines for the topic: "${currentNewsQ}". 
+Today's date: ${new Date().toDateString()}.
+Return ONLY a valid JSON array with exactly this structure, no markdown, no extra text:
+[{"title":"...","source":"...","description":"...","category":"...","time":"X hours ago"}]
+Make the news realistic and relevant. Vary the sources. Keep titles under 90 chars. Descriptions 1-2 sentences.`;
+
+    const raw  = await callGroq([{ role:'user', content:prompt }], 'You are a JSON-only news API. Return ONLY valid JSON arrays. No markdown. No extra text.');
+    const clean = raw.replace(/```json|```/g,'').trim();
+
+    // Find the JSON array robustly
+    const start = clean.indexOf('[');
+    const end   = clean.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('No JSON array in response');
+    const articles = JSON.parse(clean.slice(start, end + 1));
+
+    renderNews(articles);
+    updateTicker(articles.slice(0, 6));
+
+  } catch(e) {
+    grid.innerHTML = `
+      <div class="news-empty">
+        <div class="big">📡</div>
+        <p>Couldn't load news right now.<br>
+           <button class="btn btn-blue" style="margin-top:12px" onclick="loadNews(document.querySelector('.ntab.active'))">Try Again</button>
+        </p>
+      </div>`;
+    console.error('News error:', e);
+  }
+}
+
+function renderNews(articles) {
+  const grid = document.getElementById('newsGrid');
+  if (!articles || articles.length === 0) {
+    grid.innerHTML = `<div class="news-empty"><div class="big">🔍</div><p>No articles found. Try another category.</p></div>`;
+    return;
+  }
+  grid.innerHTML = articles.map((a,i) => `
+    <div class="news-card" onclick="askAboutNews('${(a.title||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <div class="nc-source">${escHtml(a.source || 'NOVA Feed')}</div>
+      <div class="nc-title">${escHtml(a.title || '')}</div>
+      <div class="nc-desc">${escHtml(a.description || '')}</div>
+      <div class="nc-footer">
+        <span class="nc-time">${escHtml(a.time || 'Today')}</span>
+        <span class="nc-ask">Ask NOVA →</span>
+      </div>
+    </div>`).join('');
+}
+
+function askAboutNews(title) {
+  // Switch to chat
+  const chatNav = document.querySelector('.nav-item:first-of-type');
+  switchPanel('chat', document.querySelectorAll('.nav-item')[0]);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[0].classList.add('active');
+
+  // Set to news analyst mode
+  const newsChip = document.querySelector('.mode-chip[data-mode="news"]');
+  if (newsChip) { document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active')); newsChip.classList.add('active'); currentMode = 'news'; }
+
+  setTimeout(() => {
+    document.getElementById('chatInput').value = `Explain this news story in detail: "${title}"`;
+    sendMessage();
+  }, 300);
+}
+
+function refreshCurrentNews() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  loadNews(document.querySelector('.ntab.active')).finally(() => {
+    btn.classList.remove('spinning');
+  });
+}
+
+// ─── FACTS ───────────────────────────────────────────────────────
+const FACTS_DATA = [
+  { cat:'space',   catLabel:'🚀 Space',   icon:'🌌', text:"A day on Venus is longer than a year on Venus. It takes 243 Earth days to rotate once but only 225 days to orbit the Sun — so it's year ends before its day does." },
+  { cat:'india',   catLabel:'🇮🇳 India',  icon:'🛕', text:"India's Kumbh Mela is so large it's visible from space. The 2019 Prayagraj Kumbh gathered over 400 million people — more than the entire population of the USA — making it the largest peaceful human gathering ever recorded." },
+  { cat:'science', catLabel:'⚛️ Science', icon:'🧬', text:"Your body replaces nearly all its atoms every 7 years. The iron in your blood, the calcium in your bones — almost every atom you're made of right now is different from the one you had a decade ago." },
+  { cat:'world',   catLabel:'🌍 World',   icon:'🗺️', text:"Oxford University is older than the Aztec Empire. Teaching began at Oxford around 1096–1167 AD. The Aztec Empire wasn't founded until 1428 AD. Oxford had been educating students for over 250 years before Aztecs rose to power." },
+  { cat:'india',   catLabel:'🇮🇳 India',  icon:'🔢', text:"India invented the concept of zero. The mathematical zero (as a number, not just a placeholder) was formally defined by Indian mathematician Brahmagupta in 628 AD — changing mathematics and computing forever." },
+  { cat:'science', catLabel:'⚛️ Science', icon:'🐙', text:"Octopuses have three hearts, blue blood, and nine brains — one central brain and one mini-brain in each of their eight arms. Each arm can act independently, even after being severed." },
+  { cat:'space',   catLabel:'🚀 Space',   icon:'🌠', text:"There are more stars in the observable universe than grains of sand on every beach and desert on Earth combined — approximately 10 times more. Yet the universe is 99.9999% empty space." },
+  { cat:'world',   catLabel:'🌍 World',   icon:'🦈', text:"Sharks are older than trees. Sharks have existed for about 450 million years. Trees only evolved around 360 million years ago. Sharks swam in the oceans before forests ever existed on land." },
+  { cat:'india',   catLabel:'🇮🇳 India',  icon:'🏛️', text:"India's Nalanda University was the world's first residential university. Founded in 5th century AD, it had 10,000 students and 2,000 teachers from all over Asia, with a library of 9 million manuscripts." },
+  { cat:'science', catLabel:'⚛️ Science', icon:'🧠', text:"Your brain generates about 70,000 thoughts per day and uses 20% of all your body's oxygen and energy — despite being only 2% of your body weight. It never fully 'shuts off', even during deep sleep." },
+  { cat:'space',   catLabel:'🚀 Space',   icon:'🪐', text:"Saturn's rings are only about 10–100 metres thick on average, despite being up to 282,000 km wide. If Saturn's rings were scaled to the size of a piece of paper, they'd be a kilometre across." },
+  { cat:'world',   catLabel:'🌍 World',   icon:'🐋', text:"A blue whale's heart is so large a human could crawl through its arteries. It beats just 8–10 times per minute and can be heard from 2 miles away. Its heartbeat alone is louder than a running motorcycle." }
+];
+
+function populateFacts() {
+  const grid = document.getElementById('factsGrid');
+  grid.innerHTML = FACTS_DATA.map(f => `
+    <div class="fact-card">
+      <div class="fact-cat ${f.cat}">${f.catLabel}</div>
+      <div class="fact-icon">${f.icon}</div>
+      <div class="fact-text">${escHtml(f.text)}</div>
+      <div class="fact-share" onclick="askAboutFact('${f.text.slice(0,80).replace(/'/g,"\\'")}')">💬 Ask NOVA to explain more →</div>
+    </div>`).join('');
+}
+
+function askAboutFact(snippet) {
+  switchPanelDirect('chat');
+  const factsChip = document.querySelector('.mode-chip[data-mode="facts"]');
+  if (factsChip) { document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active')); factsChip.classList.add('active'); currentMode = 'facts'; }
+  setTimeout(() => {
+    document.getElementById('chatInput').value = `Tell me more about this: "${snippet}..."`;
+    sendMessage();
+  }, 300);
+}
+
+// ─── WELLNESS ────────────────────────────────────────────────────
+const WELLNESS_CARDS = [
+  { icon:'🧘', title:'5-Minute Meditation', desc:'A quick guided breathing exercise to calm your mind right now.', tag:'mental',   tagLabel:'Mental Health',    q:'Give me a short 5-minute guided meditation or breathing exercise I can do right now.' },
+  { icon:'😴', title:'Better Sleep Tonight', desc:'Practical techniques to fall asleep faster and sleep deeper.', tag:'physical',  tagLabel:'Physical Health',  q:'Give me 5 practical evidence-based tips to sleep better tonight.' },
+  { icon:'🌞', title:'Morning Routine', desc:'Build the perfect morning that sets you up for a great day.', tag:'mindset',   tagLabel:'Mindset',          q:'What does the ideal morning routine look like for mental and physical health?' },
+  { icon:'💚', title:'Stress Relief Now', desc:'Instant techniques to reduce stress and anxiety in minutes.', tag:'mental',   tagLabel:'Mental Health',    q:'Give me 3 instant stress-relief techniques I can use right now, backed by science.' },
+  { icon:'🤝', title:'Better Relationships', desc:'Simple habits to deepen your connections with people.', tag:'social',    tagLabel:'Social Wellness',  q:'What are the key habits that make relationships stronger and more meaningful?' },
+  { icon:'🏃', title:'Exercise Motivation', desc:'How to start moving and actually stick to it.', tag:'physical',  tagLabel:'Physical Health',  q:'How do I build a sustainable exercise habit when I lack motivation? Keep it practical.' },
+  { icon:'🧠', title:'Mental Clarity', desc:'Clear brain fog and sharpen your focus and concentration.', tag:'mindset',   tagLabel:'Mindset',          q:'How can I improve my mental clarity and focus? What are the best science-backed methods?' },
+  { icon:'❤️', title:'Self-Compassion', desc:'How to be kinder to yourself and stop self-criticism.', tag:'mental',   tagLabel:'Mental Health',    q:'How do I practice self-compassion and stop being so hard on myself? Give me practical steps.' },
+  { icon:'🌱', title:'Build Good Habits', desc:'The science of habit formation and how to make it stick.', tag:'mindset',   tagLabel:'Mindset',          q:'Explain the science of habit formation and give me a practical framework to build good habits.' }
+];
+
+function populateWellness() {
+  document.getElementById('wellGrid').innerHTML = WELLNESS_CARDS.map(w => `
+    <div class="well-card" onclick="askWellness('${w.q.replace(/'/g,"\\'")}')">
+      <div class="wc-icon">${w.icon}</div>
+      <div class="wc-title">${w.title}</div>
+      <div class="wc-desc">${w.desc}</div>
+      <div class="wc-tag ${w.tag}">${w.tagLabel}</div>
+    </div>`).join('');
+}
+
+function askWellness(q) {
+  switchPanelDirect('chat');
+  const wellChip = document.querySelector('.mode-chip[data-mode="wellness"]');
+  if (wellChip) { document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active')); wellChip.classList.add('active'); currentMode = 'wellness'; }
+  setTimeout(() => {
+    document.getElementById('chatInput').value = q;
+    sendMessage();
+  }, 300);
+}
+
+// ─── INDIA ───────────────────────────────────────────────────────
+const INDIA_TOPICS = [
+  { icon:'🚀', title:'ISRO & Space',          sub:'Moon, Mars, Gaganyaan & beyond',    q:'What are the latest ISRO missions and achievements? What is India\'s space roadmap?' },
+  { icon:'📈', title:'Economy & GDP',          sub:'Growth, markets & global ranking',   q:'What is the current state of India\'s economy? GDP growth, key sectors and outlook.' },
+  { icon:'🏛️', title:'Politics & Governance', sub:'Parliament, policy & elections',     q:'What are the major political developments in India right now? Key policies and governance.' },
+  { icon:'🎓', title:'Education & UPSC',       sub:'Exams, tips & study strategy',       q:'Give me the best strategy and tips to crack UPSC Civil Services exam. What should I focus on?' },
+  { icon:'🏏', title:'Cricket & Sports',       sub:'Team India & latest scores',         q:'What is the latest news about Indian cricket and sports? Recent results and upcoming matches.' },
+  { icon:'💻', title:'Tech & Startups',        sub:'Unicorns, innovation & Digital India',q:'What are the biggest tech and startup stories from India right now? Major companies and innovations.' },
+  { icon:'🌿', title:'Environment',            sub:'Climate, conservation & clean energy',q:'What is India doing about climate change, renewable energy and environmental conservation?' },
+  { icon:'🎭', title:'Culture & Heritage',     sub:'Festivals, art & amazing history',   q:'Tell me some amazing and lesser-known facts about India\'s history, culture and heritage.' },
+  { icon:'🏥', title:'Healthcare',             sub:'Health schemes & medical progress',  q:'What are the major healthcare initiatives and medical achievements in India recently?' },
+  { icon:'🛡️', title:'Defence & Security',    sub:'Military, borders & national security',q:'What are the latest developments in India\'s defence and military modernization?' }
+];
+
+function populateIndia() {
+  document.getElementById('indiaGrid').innerHTML = INDIA_TOPICS.map(t => `
+    <div class="india-topic" onclick="askIndia('${t.q.replace(/'/g,"\\'")}')">
+      <div class="it-icon">${t.icon}</div>
+      <div class="it-text">
+        <div class="it-title">${t.title}</div>
+        <div class="it-sub">${t.sub}</div>
+      </div>
+    </div>`).join('');
+}
+
+function askIndia(q) {
+  switchPanelDirect('chat');
+  const indiaChip = document.querySelector('.mode-chip[data-mode="india"]');
+  if (indiaChip) { document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active')); indiaChip.classList.add('active'); currentMode = 'india'; }
+  setTimeout(() => {
+    document.getElementById('chatInput').value = q;
+    sendMessage();
+  }, 300);
+}
+
+// ─── TICKER ──────────────────────────────────────────────────────
+function populateTicker() {
+  const defaults = [
+    'NOVA AI — Your personal companion for news, knowledge & wellness',
+    'Powered by Groq — Ultra-fast AI responses',
+    'Click any India topic to get an instant AI briefing 🇮🇳',
+    'Switch chat modes for different AI personalities',
+    'Ask NOVA anything — world news, facts, advice, wellness',
+    'Amazing Facts section updated — check it out ✨',
+    'Stay curious. Stay informed. Stay well. — NOVA'
+  ];
+  setTicker(defaults);
+}
+
+function updateTicker(articles) {
+  const items = articles.map(a => a.title || '').filter(Boolean);
+  if (items.length > 0) setTicker(items);
+}
+
+function setTicker(items) {
+  const colors = ['var(--blue)','var(--green)','var(--amber)','var(--rose)','var(--violet)'];
+  const html   = items.map((t,i) =>
+    `<div class="ticker-item"><span class="ticker-dot" style="background:${colors[i%colors.length]}"></span>${escHtml(t)}</div>`
+  ).join('');
+  const track = document.getElementById('tickerTrack');
+  track.innerHTML = html + html; // duplicate for infinite scroll
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function switchPanelDirect(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+
+  // Find matching nav item
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(item => {
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes("'" + name + "'")) {
+      item.classList.add('active');
+    }
+  });
+
+  const meta = PANEL_META[name] || {};
+  document.getElementById('topTitle').textContent = meta.title || name;
+  document.getElementById('topDesc').textContent  = meta.desc  || '';
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Allow Enter key on setup input
+document.addEventListener('DOMContentLoaded', () => {
+  const ki = document.getElementById('groqKeyInput');
+  if (ki) ki.addEventListener('keydown', e => { if(e.key==='Enter') initApp(); });
+});
+</script>
+</body>
+</html>
